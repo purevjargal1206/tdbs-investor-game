@@ -1,0 +1,1127 @@
+<!DOCTYPE html>
+<html lang="mn">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+<title>Глобал Хөрөнгө Оруулагч — TDB Securities</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Manrope:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+<style>
+*, *::before, *::after { margin: 0; padding: 0; box-sizing: border-box; -webkit-tap-highlight-color: transparent; }
+
+:root {
+  --navy:       #1B2B45;
+  --navy-mid:   #1e3252;
+  --navy-dark:  #0e1d30;
+  --navy-deep:  #091525;
+  --soft-blue:  #D0DCE8;
+  --blue2:      #3D6A96;
+  --blue3:      #5a8fbf;
+  --gold:       #C9A050;
+  --gold-dim:   #a8832e;
+  --white:      #FFFFFF;
+  --off-white:  #F4F6F9;
+  --green:      #4ade80;
+  --glass:      rgba(255,255,255,0.06);
+  --glass-md:   rgba(255,255,255,0.09);
+  --glass-hov:  rgba(255,255,255,0.12);
+  --glass-bd:   rgba(208,220,232,0.15);
+  --glass-bd2:  rgba(208,220,232,0.28);
+  --t-primary:  #FFFFFF;
+  --t-sec:      rgba(208,220,232,0.82);
+  --t-muted:    rgba(208,220,232,0.48);
+}
+
+html, body {
+  width: 100%; min-height: 100vh;
+  font-family: 'Manrope', Arial, sans-serif;
+  font-weight: 300;
+  background: var(--navy-deep);
+  color: var(--t-primary);
+  overflow-x: hidden;
+}
+
+/* ── BACKGROUND ─────────────────────────────────────────────── */
+.bg-layer {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background: radial-gradient(ellipse 80% 60% at 70% -10%, rgba(61,106,150,0.22) 0%, transparent 60%),
+              radial-gradient(ellipse 60% 50% at -10% 80%, rgba(201,160,80,0.1) 0%, transparent 60%),
+              linear-gradient(170deg, #111e30 0%, #0a1525 55%, #070f1c 100%);
+}
+.stars-canvas { position: fixed; inset: 0; z-index: 0; pointer-events: none; }
+.grid-lines {
+  position: fixed; inset: 0; z-index: 0; pointer-events: none;
+  background-image:
+    linear-gradient(rgba(208,220,232,0.025) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(208,220,232,0.025) 1px, transparent 1px);
+  background-size: 48px 48px;
+}
+
+/* ── APP WRAPPER ─────────────────────────────────────────────── */
+.app {
+  position: relative;
+  width: 100%; max-width: 430px;
+  min-height: 100vh;
+  margin: 0 auto;
+  z-index: 1;
+  overflow: hidden;
+}
+
+/* ── SCREENS ─────────────────────────────────────────────────── */
+.screen {
+  position: absolute; inset: 0;
+  width: 100%;
+  min-height: 100vh;
+  display: flex; flex-direction: column; align-items: center;
+  padding: 0 22px;
+  opacity: 0;
+  transform: translateX(48px);
+  pointer-events: none;
+  transition: opacity 0.42s cubic-bezier(0.4,0,0.2,1),
+              transform 0.42s cubic-bezier(0.4,0,0.2,1);
+  will-change: opacity, transform;
+}
+.screen.active  { opacity:1; transform:translateX(0); pointer-events:all; }
+.screen.exiting { opacity:0; transform:translateX(-48px); pointer-events:none; }
+
+/* ── PROGRESS DOTS ───────────────────────────────────────────── */
+.progress-wrap {
+  display: flex; gap: 7px; align-items: center;
+  padding: 0; margin-bottom: 4px;
+}
+.pdot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--glass-bd);
+  border: 1px solid var(--glass-bd2);
+  transition: all 0.35s ease;
+}
+.pdot.done { background: var(--blue2); border-color: var(--blue2); }
+.pdot.current { width: 22px; border-radius: 4px; background: var(--soft-blue); border-color: var(--soft-blue); }
+
+/* ── COMMON TYPOGRAPHY ───────────────────────────────────────── */
+.q-label {
+  font-size: 10.5px; font-weight: 600;
+  color: var(--t-muted); letter-spacing: 0.15em; text-transform: uppercase;
+}
+.q-title {
+  font-size: 25px; font-weight: 700; line-height: 1.22; color: var(--white);
+  margin-top: 7px;
+}
+.q-sub {
+  font-size: 13.5px; font-weight: 300; color: var(--t-sec);
+  margin-top: 5px; line-height: 1.55;
+}
+
+/* ── BUTTONS ─────────────────────────────────────────────────── */
+.btn {
+  width: 100%; padding: 17px 20px;
+  border-radius: 20px; border: none; cursor: pointer;
+  font-family: 'Manrope', Arial, sans-serif;
+  font-size: 15.5px; font-weight: 600;
+  transition: all 0.18s ease;
+  position: relative; overflow: hidden; outline: none;
+  display: flex; align-items: center; justify-content: center; gap: 8px;
+}
+.btn::after {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.08) 0%, transparent 55%);
+  pointer-events: none;
+}
+.btn:active { transform: scale(0.97); }
+
+.btn-primary { background: var(--blue2); color: var(--white); }
+.btn-primary:hover { background: var(--blue3); }
+
+.btn-gold {
+  background: linear-gradient(135deg, #c9a050 0%, #a0772a 100%);
+  color: var(--navy-deep); font-weight: 700;
+}
+.btn-gold:hover { filter: brightness(1.08); }
+
+.btn-ghost {
+  background: var(--glass); border: 1px solid var(--glass-bd);
+  color: var(--t-sec); font-weight: 400;
+}
+.btn-ghost:hover { background: var(--glass-md); }
+
+.btn-outline-gold {
+  background: transparent;
+  border: 1.5px solid rgba(201,160,80,0.45);
+  color: var(--gold); font-weight: 600;
+}
+
+/* ── CHOICE CARDS ────────────────────────────────────────────── */
+.choices { width: 100%; display: flex; flex-direction: column; gap: 11px; }
+.choice {
+  width: 100%; display: flex; align-items: center; gap: 15px;
+  padding: 18px 18px;
+  border-radius: 20px;
+  background: var(--glass);
+  border: 1.5px solid var(--glass-bd);
+  cursor: pointer;
+  transition: all 0.22s cubic-bezier(0.4,0,0.2,1);
+  position: relative; overflow: hidden;
+  text-align: left;
+}
+.choice::before {
+  content: ''; position: absolute; inset: 0;
+  background: linear-gradient(135deg, rgba(255,255,255,0.04) 0%, transparent 55%);
+  pointer-events: none;
+}
+.choice:active, .choice:hover { background: var(--glass-md); transform: translateY(-2px); }
+.choice.selected {
+  background: rgba(61,106,150,0.22);
+  border-color: var(--blue2);
+  transform: translateY(-2px);
+}
+.choice.selected .c-check { opacity: 1; transform: scale(1) rotate(0deg); }
+
+.c-icon {
+  width: 50px; height: 50px; border-radius: 16px;
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+}
+.c-icon svg { width: 24px; height: 24px; }
+.ci-blue  { background: rgba(61,106,150,0.22); color: var(--blue3); }
+.ci-gold  { background: rgba(201,160,80,0.15); color: var(--gold); }
+.ci-soft  { background: rgba(208,220,232,0.1); color: var(--soft-blue); }
+.ci-green { background: rgba(74,222,128,0.12); color: #4ade80; }
+
+.c-body { flex: 1; }
+.c-title { font-size: 15.5px; font-weight: 600; color: var(--white); margin-bottom: 3px; }
+.c-desc  { font-size: 12px; font-weight: 300; color: var(--t-muted); line-height: 1.4; }
+
+.c-check {
+  width: 23px; height: 23px; border-radius: 50%;
+  background: var(--blue2);
+  display: flex; align-items: center; justify-content: center;
+  flex-shrink: 0;
+  opacity: 0; transform: scale(0.4) rotate(-45deg);
+  transition: all 0.25s cubic-bezier(0.34,1.56,0.64,1);
+}
+.c-check svg { width: 12px; height: 12px; stroke: white; stroke-width: 2.5; fill: none; stroke-linecap: round; stroke-linejoin: round; }
+
+/* ── SCREEN 0 — WELCOME ──────────────────────────────────────── */
+#s0 { justify-content: space-between; padding-top: 56px; padding-bottom: 44px; }
+
+.logo-row { display: flex; align-items: center; gap: 12px; }
+.logo-mark {
+  width: 44px; height: 44px; border-radius: 14px;
+  background: linear-gradient(135deg, var(--blue2) 0%, var(--navy-mid) 100%);
+  border: 1px solid var(--glass-bd2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 800; color: var(--soft-blue); letter-spacing: -0.5px;
+}
+.logo-label { font-size: 12px; font-weight: 500; color: var(--t-muted); letter-spacing: 0.1em; text-transform: uppercase; }
+
+.hero { display: flex; flex-direction: column; align-items: center; gap: 20px; padding: 0 4px; }
+
+.live-badge {
+  display: inline-flex; align-items: center; gap: 8px;
+  padding: 7px 15px; border-radius: 50px;
+  background: var(--glass); border: 1px solid var(--glass-bd2);
+  font-size: 11.5px; font-weight: 500; color: var(--soft-blue);
+  letter-spacing: 0.07em;
+}
+.live-dot {
+  width: 7px; height: 7px; border-radius: 50%;
+  background: var(--gold);
+  animation: pulse-live 1.8s ease-in-out infinite;
+}
+@keyframes pulse-live {
+  0%,100%{ opacity:1; transform:scale(1); box-shadow: 0 0 0 0 rgba(201,160,80,0.4); }
+  50%{ opacity:.7; transform:scale(.85); box-shadow: 0 0 0 5px rgba(201,160,80,0); }
+}
+
+.hero-title {
+  font-size: 38px; font-weight: 800; line-height: 1.12;
+  text-align: center; color: var(--white);
+  letter-spacing: -0.5px;
+}
+.hero-title .hl { color: var(--gold); display: block; }
+
+.hero-sub {
+  font-size: 14.5px; font-weight: 300; color: var(--t-sec);
+  text-align: center; line-height: 1.6; max-width: 285px;
+}
+
+/* Orbital globe */
+.globe-wrap { width: 180px; height: 180px; position: relative; flex-shrink: 0; }
+.orb-ring {
+  position: absolute; border-radius: 50%; border: 1px solid;
+  top: 50%; left: 50%; transform: translate(-50%,-50%);
+}
+.orb-r1 { width: 76px; height: 76px; border-color: rgba(61,106,150,0.55); background: rgba(61,106,150,0.12); }
+.orb-r2 { width: 120px; height: 120px; border-color: rgba(61,106,150,0.28); animation: spin1 14s linear infinite; }
+.orb-r3 { width: 164px; height: 164px; border-color: rgba(208,220,232,0.1); animation: spin1 22s linear infinite reverse; }
+.orb-dot { position: absolute; width: 7px; height: 7px; border-radius: 50%; top: -3.5px; left: 50%; transform: translateX(-50%); }
+.orb-dot.gold { background: var(--gold); box-shadow: 0 0 8px var(--gold); }
+.orb-dot.blue { background: var(--blue3); box-shadow: 0 0 8px var(--blue3); top: auto; bottom: -3.5px; }
+.orb-core {
+  width: 58px; height: 58px; border-radius: 50%;
+  background: linear-gradient(135deg, var(--blue2) 0%, #1a3860 100%);
+  position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+  display: flex; align-items: center; justify-content: center;
+  box-shadow: 0 0 24px rgba(61,106,150,0.35);
+}
+.orb-core svg { width: 26px; height: 26px; color: var(--soft-blue); }
+@keyframes spin1 { from{transform:translate(-50%,-50%) rotate(0)} to{transform:translate(-50%,-50%) rotate(360deg)} }
+
+.timer-hint {
+  display: flex; align-items: center; gap: 6px;
+  font-size: 12px; font-weight: 400; color: var(--t-muted);
+}
+.timer-hint svg { width: 14px; height: 14px; stroke: var(--t-muted); fill: none; stroke-width: 2; }
+
+.welcome-actions { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.tagline {
+  text-align: center; font-size: 11px; font-weight: 300;
+  color: var(--t-muted); letter-spacing: 0.06em; margin-top: 4px;
+}
+
+/* ── SCREENS 1-3 — QUESTIONS ─────────────────────────────────── */
+.q-screen { justify-content: flex-start; padding-top: 22px; padding-bottom: 48px; }
+.q-head { width: 100%; display: flex; flex-direction: column; gap: 0; margin-bottom: 28px; }
+.q-footer { width: 100%; margin-top: auto; padding-top: 24px; }
+
+/* ── SCREEN 4 — RESULT ───────────────────────────────────────── */
+#s4 { justify-content: flex-start; padding-top: 22px; padding-bottom: 48px; }
+
+.result-badge {
+  display: inline-block;
+  padding: 6px 14px; border-radius: 50px;
+  background: rgba(201,160,80,0.12);
+  border: 1px solid rgba(201,160,80,0.28);
+  font-size: 10.5px; font-weight: 600; color: var(--gold);
+  letter-spacing: 0.12em; text-transform: uppercase;
+  margin-bottom: 14px;
+}
+.result-type-name {
+  font-size: 28px; font-weight: 800; line-height: 1.18;
+  color: var(--white); margin-bottom: 10px;
+}
+.result-type-name .hl { color: var(--gold); }
+.result-desc-text {
+  font-size: 13.5px; font-weight: 300; color: var(--t-sec);
+  line-height: 1.62; margin-bottom: 22px;
+}
+
+.card {
+  width: 100%; padding: 18px 18px;
+  border-radius: 20px; background: var(--glass);
+  border: 1.5px solid var(--glass-bd);
+  margin-bottom: 12px;
+}
+.card-title {
+  font-size: 11px; font-weight: 600; color: var(--t-muted);
+  letter-spacing: 0.12em; text-transform: uppercase; margin-bottom: 14px;
+}
+
+/* Score bars */
+.score-row { display: flex; align-items: center; gap: 11px; margin-bottom: 12px; }
+.score-row:last-child { margin-bottom: 0; }
+.score-lbl { font-size: 12px; font-weight: 400; color: var(--t-sec); width: 82px; flex-shrink: 0; }
+.score-track { flex: 1; height: 5px; border-radius: 3px; background: rgba(208,220,232,0.1); overflow: hidden; }
+.score-fill { height: 100%; border-radius: 3px; width: 0; transition: width 1.1s cubic-bezier(0.4,0,0.2,1); }
+.sf-blue { background: linear-gradient(90deg, var(--blue2) 0%, var(--blue3) 100%); }
+.sf-gold { background: linear-gradient(90deg, var(--gold-dim) 0%, var(--gold) 100%); }
+.sf-green { background: linear-gradient(90deg, #22c55e 0%, #4ade80 100%); }
+.score-val { font-size: 11.5px; font-weight: 600; color: var(--soft-blue); width: 28px; text-align: right; flex-shrink: 0; }
+
+/* Portfolio */
+.port-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 14px; }
+.port-return { font-size: 13px; font-weight: 700; color: var(--green); }
+.port-item { display: flex; align-items: center; gap: 11px; margin-bottom: 10px; }
+.port-item:last-child { margin-bottom: 0; }
+.port-ticker {
+  width: 44px; height: 30px; border-radius: 9px;
+  background: rgba(61,106,150,0.28);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 10px; font-weight: 700; color: var(--soft-blue);
+  letter-spacing: 0.04em; flex-shrink: 0;
+}
+.port-name { flex: 1; font-size: 13px; font-weight: 400; color: var(--t-primary); }
+.port-pct { font-size: 12px; font-weight: 600; color: var(--t-sec); width: 34px; text-align: right; flex-shrink: 0; }
+.port-bar { width: 52px; height: 4px; border-radius: 2px; background: rgba(208,220,232,0.1); overflow: hidden; flex-shrink: 0; }
+.port-bar-fill { height: 100%; border-radius: 2px; background: var(--blue2); transition: width 1.3s cubic-bezier(0.4,0,0.2,1); width: 0; }
+
+/* ── SCREEN 5 — REWARD / CTA ─────────────────────────────────── */
+#s5 { justify-content: space-between; padding-top: 36px; padding-bottom: 44px; }
+
+.reward-top { display: flex; flex-direction: column; align-items: center; gap: 20px; width: 100%; }
+.reward-orb {
+  width: 100px; height: 100px; border-radius: 50%;
+  background: rgba(201,160,80,0.12);
+  border: 2px solid rgba(201,160,80,0.3);
+  display: flex; align-items: center; justify-content: center;
+  animation: reward-pulse 2.2s ease-in-out infinite;
+}
+.reward-orb svg { width: 46px; height: 46px; color: var(--gold); }
+@keyframes reward-pulse {
+  0%,100%{ box-shadow: 0 0 0 0 rgba(201,160,80,0.25); }
+  50%{ box-shadow: 0 0 0 22px rgba(201,160,80,0); }
+}
+
+.reward-title {
+  font-size: 26px; font-weight: 700; color: var(--white);
+  text-align: center; line-height: 1.22; margin-bottom: 8px;
+}
+.reward-sub { font-size: 14px; font-weight: 300; color: var(--t-sec); text-align: center; line-height: 1.58; }
+
+.divider { width: 100%; height: 1px; background: var(--glass-bd); margin: 4px 0; }
+
+.steps { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.step {
+  display: flex; align-items: center; gap: 13px;
+  padding: 15px 16px; border-radius: 17px;
+  background: var(--glass); border: 1px solid var(--glass-bd);
+}
+.step-num {
+  width: 32px; height: 32px; border-radius: 50%; background: var(--blue2);
+  display: flex; align-items: center; justify-content: center;
+  font-size: 13px; font-weight: 700; flex-shrink: 0;
+}
+.step-txt { font-size: 13.5px; font-weight: 400; color: var(--t-primary); line-height: 1.4; }
+.step-txt b { color: var(--soft-blue); font-weight: 600; }
+
+.reward-bottom { width: 100%; display: flex; flex-direction: column; gap: 10px; }
+.cta-note { text-align: center; font-size: 11.5px; font-weight: 300; color: var(--t-muted); line-height: 1.5; }
+
+/* ── LOADING OVERLAY ─────────────────────────────────────────── */
+.loading-overlay {
+  position: fixed; inset: 0; z-index: 100;
+  background: var(--navy-deep);
+  display: flex; align-items: center; justify-content: center;
+  flex-direction: column; gap: 18px;
+  transition: opacity 0.5s ease;
+}
+.loading-logo {
+  font-size: 18px; font-weight: 800; color: var(--soft-blue);
+  letter-spacing: -0.5px;
+}
+.loading-spinner {
+  width: 36px; height: 36px; border-radius: 50%;
+  border: 2px solid var(--glass-bd);
+  border-top-color: var(--blue2);
+  animation: spin-loader 0.8s linear infinite;
+}
+@keyframes spin-loader { to { transform: rotate(360deg); } }
+.loading-text { font-size: 12px; font-weight: 300; color: var(--t-muted); letter-spacing: 0.08em; }
+
+/* ── ANIMATIONS ──────────────────────────────────────────────── */
+@keyframes fade-up {
+  from { opacity: 0; transform: translateY(22px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+.au1 { animation: fade-up 0.52s cubic-bezier(0.4,0,0.2,1) 0.08s both; }
+.au2 { animation: fade-up 0.52s cubic-bezier(0.4,0,0.2,1) 0.18s both; }
+.au3 { animation: fade-up 0.52s cubic-bezier(0.4,0,0.2,1) 0.28s both; }
+.au4 { animation: fade-up 0.52s cubic-bezier(0.4,0,0.2,1) 0.38s both; }
+.au5 { animation: fade-up 0.52s cubic-bezier(0.4,0,0.2,1) 0.48s both; }
+.au6 { animation: fade-up 0.52s cubic-bezier(0.4,0,0.2,1) 0.58s both; }
+
+/* Nav back */
+.back-btn {
+  display: flex; align-items: center; gap: 6px;
+  background: none; border: none; color: var(--t-muted);
+  font-family: 'Manrope', sans-serif; font-size: 13px; font-weight: 400;
+  cursor: pointer; padding: 4px 0; margin-bottom: 10px;
+  transition: color 0.18s;
+}
+.back-btn:hover { color: var(--t-sec); }
+.back-btn svg { width: 16px; height: 16px; stroke: currentColor; fill: none; stroke-width: 2; stroke-linecap: round; }
+
+/* ── Verified stamp on result ────────────────────────────────── */
+.verified-row {
+  display: flex; align-items: center; gap: 10px;
+  padding: 12px 16px; border-radius: 14px;
+  background: rgba(74,222,128,0.07); border: 1px solid rgba(74,222,128,0.2);
+  margin-bottom: 16px;
+}
+.verified-icon { width: 28px; height: 28px; color: var(--green); flex-shrink: 0; }
+.verified-text { font-size: 13px; font-weight: 500; color: var(--green); }
+
+</style>
+</head>
+<body>
+
+<!-- Background layers -->
+<div class="bg-layer"></div>
+<canvas class="stars-canvas" id="starsCanvas"></canvas>
+<div class="grid-lines"></div>
+
+<!-- Loading -->
+<div class="loading-overlay" id="loader">
+  <div class="loading-logo">TDB Securities</div>
+  <div class="loading-spinner"></div>
+  <div class="loading-text">Уншиж байна...</div>
+</div>
+
+<div class="app" id="app">
+
+  <!-- ══ SCREEN 0 — WELCOME ══════════════════════════════════ -->
+  <div class="screen active" id="s0">
+
+    <div class="logo-row au1">
+      <div class="logo-mark">TDB</div>
+      <div class="logo-label">Securities</div>
+    </div>
+
+    <div class="hero">
+      <div class="globe-wrap au2">
+        <div class="orb-ring orb-r3">
+          <div class="orb-dot gold"></div>
+          <div class="orb-dot blue"></div>
+        </div>
+        <div class="orb-ring orb-r2">
+          <div class="orb-dot gold" style="top:auto;bottom:-3.5px;background:var(--blue3);box-shadow:0 0 8px var(--blue3)"></div>
+        </div>
+        <div class="orb-ring orb-r1"></div>
+        <div class="orb-core">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+      </div>
+
+      <div class="live-badge au2">
+        <div class="live-dot"></div>
+        Дата Лаб V2.0 — Шинэ үеийн платформ
+      </div>
+
+      <div class="hero-title au3">
+        Таны хөрөнгө
+        <span class="hl">оруулагчийн<br>хэлбэр хэн бэ?</span>
+      </div>
+
+      <div class="hero-sub au3">
+        30 секундын тест. 3 асуулт.<br>Таны хувийн хөрөнгө оруулалтын профайл.
+      </div>
+
+      <div class="timer-hint au4">
+        <svg viewBox="0 0 24 24"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>
+        30 секунд
+      </div>
+    </div>
+
+    <div class="welcome-actions au5">
+      <button class="btn btn-primary" onclick="goTo(1)">
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        Тест эхлэх
+      </button>
+      <div class="tagline">Ирээдүйгээ өнөөдөр баталгаажуул — TDB Securities</div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 1 — Q1: MARKET ═══════════════════════════════ -->
+  <div class="screen q-screen" id="s1">
+
+    <button class="back-btn" onclick="goTo(0)">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Буцах
+    </button>
+
+    <div class="progress-wrap au1">
+      <div class="pdot current" id="pd1-1"></div>
+      <div class="pdot" id="pd1-2"></div>
+      <div class="pdot" id="pd1-3"></div>
+    </div>
+
+    <div class="q-head au2">
+      <div class="q-label">Асуулт 1 / 3</div>
+      <div class="q-title">Та аль захиалгад хөрөнгө оруулах сонирхолтой вэ?</div>
+      <div class="q-sub">Хамгийн их татах захиалгаа сонгоно уу.</div>
+    </div>
+
+    <div class="choices au3" id="choices1">
+      <div class="choice" onclick="selectAnswer('market','us',this)">
+        <div class="c-icon ci-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <line x1="12" y1="1" x2="12" y2="23"/>
+            <path d="M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">АНУ-ын хувьцаа</div>
+          <div class="c-desc">Apple, Tesla, NVIDIA гэх мэт дэлхийн тэргүүлэгч компаниуд</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="choice" onclick="selectAnswer('market','global',this)">
+        <div class="c-icon ci-gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <circle cx="12" cy="12" r="10"/>
+            <line x1="2" y1="12" x2="22" y2="12"/>
+            <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Дэлхийн захиалга</div>
+          <div class="c-desc">Олон улсын ETF, 37 орны зах зээл, 160 гаруй хөрөнгө</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="choice" onclick="selectAnswer('market','mining',this)">
+        <div class="c-icon ci-soft">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="12 2 2 19 22 19"/>
+            <line x1="12" y1="9" x2="12" y2="14"/>
+            <line x1="12" y1="17" x2="12.01" y2="17"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Уул уурхай &amp; Эрдэс баялаг</div>
+          <div class="c-desc">Алт, зэс, BHP, Rio Tinto — байгалийн баялагт суурилсан</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>
+
+    <div class="q-footer au4">
+      <button class="btn btn-primary" onclick="nextQ(1)">
+        Үргэлжлүүлэх
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 2 — Q2: RISK ══════════════════════════════════ -->
+  <div class="screen q-screen" id="s2">
+
+    <button class="back-btn" onclick="goTo(1)">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Буцах
+    </button>
+
+    <div class="progress-wrap au1">
+      <div class="pdot done"></div>
+      <div class="pdot current"></div>
+      <div class="pdot"></div>
+    </div>
+
+    <div class="q-head au2">
+      <div class="q-label">Асуулт 2 / 3</div>
+      <div class="q-title">Та хэрхэн хөрөнгө оруулдаг вэ?</div>
+      <div class="q-sub">Эрсдэлд хандах хандлагаа сонгоно уу.</div>
+    </div>
+
+    <div class="choices au3" id="choices2">
+      <div class="choice" onclick="selectAnswer('risk','aggressive',this)">
+        <div class="c-icon ci-gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M13 2L3 14h9l-1 8 10-12h-9l1-8z"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Идэвхтэй — Өндөр өгөөж</div>
+          <div class="c-desc">Том эрсдэл авч, том өгөөжийг хайна. Богино хугацаанд ихийг олохыг зорино.</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="choice" onclick="selectAnswer('risk','balanced',this)">
+        <div class="c-icon ci-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <line x1="3" y1="12" x2="21" y2="12"/>
+            <path d="M3 12l4-4-4-4M3 16l4 4-4 4"/>
+            <path d="M21 8l-4-4 4-4M21 20l-4-4 4-4"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Тэнцвэрт — Аажмаар өсөлт</div>
+          <div class="c-desc">Эрсдэл ба өгөөжийн тэнцвэрийг хадгалж, тогтвортой урт хугацааны өсөлтийг хайна.</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="choice" onclick="selectAnswer('risk','safe',this)">
+        <div class="c-icon ci-green">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Хамгаалалтын — Аюулгүй</div>
+          <div class="c-desc">Тогтвортой орлого, бага хэлбэлзэл. Хөрөнгөө хамгаалах нь тэргүүлэх зорилт.</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>
+
+    <div class="q-footer au4">
+      <button class="btn btn-primary" onclick="nextQ(2)">
+        Үргэлжлүүлэх
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 3 — Q3: GOAL ══════════════════════════════════ -->
+  <div class="screen q-screen" id="s3">
+
+    <button class="back-btn" onclick="goTo(2)">
+      <svg viewBox="0 0 24 24"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
+      Буцах
+    </button>
+
+    <div class="progress-wrap au1">
+      <div class="pdot done"></div>
+      <div class="pdot done"></div>
+      <div class="pdot current"></div>
+    </div>
+
+    <div class="q-head au2">
+      <div class="q-label">Асуулт 3 / 3</div>
+      <div class="q-title">Таны хөрөнгө оруулалтын гол зорилго юу вэ?</div>
+      <div class="q-sub">Хамгийн чухал зорилгоо сонгоно уу.</div>
+    </div>
+
+    <div class="choices au3" id="choices3">
+      <div class="choice" onclick="selectAnswer('goal','growth',this)">
+        <div class="c-icon ci-gold">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <polyline points="23 6 13.5 15.5 8.5 10.5 1 18"/>
+            <polyline points="17 6 23 6 23 12"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Капитал өсгөх</div>
+          <div class="c-desc">Хөрөнгийг дөрөв, таван жилд эрс нэмэгдүүлэх</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="choice" onclick="selectAnswer('goal','income',this)">
+        <div class="c-icon ci-blue">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <rect x="2" y="5" width="20" height="14" rx="3"/>
+            <line x1="2" y1="10" x2="22" y2="10"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Тогтмол орлого авах</div>
+          <div class="c-desc">Бонд, дивиденд — сар тутмын тогтмол эргэн төлөлт</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+
+      <div class="choice" onclick="selectAnswer('goal','stability',this)">
+        <div class="c-icon ci-soft">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round">
+            <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"/>
+          </svg>
+        </div>
+        <div class="c-body">
+          <div class="c-title">Хуримтлал хадгалах</div>
+          <div class="c-desc">Хөрөнгийн үнэ цэнийг хамгаалж, аюулгүй байлгах</div>
+        </div>
+        <div class="c-check"><svg viewBox="0 0 24 24"><polyline points="20 6 9 17 4 12"/></svg></div>
+      </div>
+    </div>
+
+    <div class="q-footer au4">
+      <button class="btn btn-gold" onclick="nextQ(3)">
+        Үр дүнгээ харах
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 4 — RESULT ════════════════════════════════════ -->
+  <div class="screen" id="s4">
+    <div style="width:100%;padding-top:22px;padding-bottom:44px;">
+
+      <div class="result-badge au1" id="r-badge">ТА БОЛ</div>
+
+      <div class="result-type-name au2" id="r-type">...</div>
+      <div class="result-desc-text au3" id="r-desc">...</div>
+
+      <div class="verified-row au3">
+        <svg class="verified-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/>
+          <polyline points="22 4 12 14.01 9 11.01"/>
+        </svg>
+        <div class="verified-text">Таны хөрөнгө оруулагчийн профайл нээгдлээ</div>
+      </div>
+
+      <div class="card au4">
+        <div class="card-title">Хөрөнгө оруулалтын үнэлгээ</div>
+        <div class="score-row">
+          <div class="score-lbl">Эрсдэлийн түвшин</div>
+          <div class="score-track"><div class="score-fill sf-gold" id="sf-risk"></div></div>
+          <div class="score-val" id="sv-risk">—</div>
+        </div>
+        <div class="score-row">
+          <div class="score-lbl">Өсөлтийн хүч</div>
+          <div class="score-track"><div class="score-fill sf-blue" id="sf-growth"></div></div>
+          <div class="score-val" id="sv-growth">—</div>
+        </div>
+        <div class="score-row">
+          <div class="score-lbl">Глобал хүрэх</div>
+          <div class="score-track"><div class="score-fill sf-green" id="sf-global"></div></div>
+          <div class="score-val" id="sv-global">—</div>
+        </div>
+      </div>
+
+      <div class="card au5">
+        <div class="port-head">
+          <div class="card-title" style="margin-bottom:0">Жишиг портфель</div>
+          <div class="port-return" id="r-return">—</div>
+        </div>
+        <div id="portfolio-items"></div>
+      </div>
+
+      <div class="au6" style="display:flex;flex-direction:column;gap:10px;padding-bottom:10px;">
+        <button class="btn btn-gold" onclick="goTo(5)">
+          Бэлэгний код авах
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+        </button>
+        <button class="btn btn-ghost" onclick="shareResult()">Найзтайгаа хуваалцах</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ══ SCREEN 5 — REWARD / CTA ══════════════════════════════ -->
+  <div class="screen" id="s5">
+
+    <div class="reward-top">
+      <div class="reward-orb au1">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.4" stroke-linecap="round" stroke-linejoin="round">
+          <polyline points="20 12 20 22 4 22 4 12"/>
+          <rect x="2" y="7" width="20" height="5"/>
+          <line x1="12" y1="22" x2="12" y2="7"/>
+          <path d="M12 7H7.5a2.5 2.5 0 0 1 0-5C11 2 12 7 12 7z"/>
+          <path d="M12 7h4.5a2.5 2.5 0 0 0 0-5C13 2 12 7 12 7z"/>
+        </svg>
+      </div>
+
+      <div class="reward-text au2">
+        <div class="reward-title">Бэлэг тань хүлээж байна</div>
+        <div class="reward-sub">Таны профайл амжилттай тодорхойлогдлоо.<br>Доорх алхмуудыг дагаад бэлэгтэй болоорой.</div>
+      </div>
+
+      <div class="divider"></div>
+
+      <div class="steps au3">
+        <div class="step">
+          <div class="step-num">1</div>
+          <div class="step-txt">Энэ дэлгэцийг ажилтанд <b>үзүүлнэ үү</b></div>
+        </div>
+        <div class="step">
+          <div class="step-num">2</div>
+          <div class="step-txt">Ажилтан таны профайлыг <b>баталгаажуулна</b></div>
+        </div>
+        <div class="step">
+          <div class="step-num">3</div>
+          <div class="step-txt"><b>Бэлэгтэй болох</b> эсвэл хүрд эргүүлнэ</div>
+        </div>
+      </div>
+    </div>
+
+    <div class="divider" style="margin:4px 0"></div>
+
+    <div class="reward-bottom au4">
+      <div style="text-align:center;padding:14px 0 4px;">
+        <div style="font-size:14px;font-weight:600;color:var(--soft-blue);margin-bottom:6px;">Бодит хөрөнгө оруулалт эхлүүлэх үү?</div>
+        <div style="font-size:13px;font-weight:300;color:var(--t-muted);margin-bottom:14px;">TDB Securities дээр данс нээж, DataLab V2.0-ийг 30 хоног үнэгүй ашиглаарай.</div>
+      </div>
+      <button class="btn btn-primary" onclick="openAccount()">
+        Данс нээх — Үнэгүй эхлэх
+        <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
+      </button>
+      <button class="btn btn-ghost" onclick="goTo(0)">Дахин тоглох</button>
+      <div class="cta-note">Мэдэж хөрөнгө оруул — TDB Securities &bull; DataLab V2.0</div>
+    </div>
+  </div>
+
+</div><!-- /app -->
+
+<script>
+/* ── STATE ─────────────────────────────────────────────────────── */
+var answers = { market: null, risk: null, goal: null };
+var currentScreen = 0;
+
+/* ── PROFILES ──────────────────────────────────────────────────── */
+var profiles = {
+  'us-aggressive': {
+    badge:  'АНУ · ИДЭВХТЭЙ',
+    type:   '<span class="hl">Технологийн</span> Пионер',
+    desc:   'Та АНУ-ын технологийн тэргүүлэгч компаниудад өндөр эрсдэлтэй боловч хамгийн өндөр өгөөжийн төлөө хөрөнгө оруулдаг. Ирээдүйг өнөөдрөөс л бүтээдэг.',
+    risk: 88, growth: 95, global: 38,
+    ret: '+18.4%',
+    port: [
+      { t:'AAPL', n:'Apple Inc.',  p:32 },
+      { t:'NVDA', n:'NVIDIA Corp.',p:26 },
+      { t:'TSLA', n:'Tesla Inc.',  p:22 },
+      { t:'QQQ',  n:'Nasdaq ETF', p:20 }
+    ]
+  },
+  'us-balanced': {
+    badge:  'АНУ · ТЭНЦВЭРТ',
+    type:   'Хойд Америкийн <span class="hl">Тэнцвэрт</span> Хөрөнгө Оруулагч',
+    desc:   'Та АНУ-ын бат бэх зах зээлд тогтвортой боловч ухаалаг аргаар хөрөнгө оруулдаг. Эрсдэл ба өгөөжийг тэнцвэрттэй удирдана.',
+    risk: 54, growth: 70, global: 42,
+    ret: '+11.2%',
+    port: [
+      { t:'AAPL', n:'Apple Inc.',  p:35 },
+      { t:'SPY',  n:'S&P 500 ETF', p:30 },
+      { t:'MSFT', n:'Microsoft',   p:20 },
+      { t:'AGG',  n:'Bond ETF',    p:15 }
+    ]
+  },
+  'us-safe': {
+    badge:  'АНУ · ХАМГААЛАЛТ',
+    type:   '<span class="hl">Найдвартай</span> АНУ-ын Хөрөнгө Оруулагч',
+    desc:   'Та хөрөнгийнхөө аюулгүй байдлыг эн тэргүүнд тавьж, АНУ-ын тогтвортой хөрөнгөд суурилсан бага эрсдэлтэй стратегийг сонгодог.',
+    risk: 27, growth: 44, global: 32,
+    ret: '+7.5%',
+    port: [
+      { t:'SPY',  n:'S&P 500 ETF', p:40 },
+      { t:'AGG',  n:'Bond ETF',    p:32 },
+      { t:'AAPL', n:'Apple Inc.',  p:18 },
+      { t:'SGOV', n:'Cash/T-Bill', p:10 }
+    ]
+  },
+  'global-aggressive': {
+    badge:  'ДЭЛХИЙ · ИДЭВХТЭЙ',
+    type:   '<span class="hl">Дэлхийн Өсөлтийн</span> Хөрөнгө Оруулагч',
+    desc:   'Та дэлхийн аль ч булангаас боломж хайж, олон улсын зах зээлд идэвхтэй оролцдог. Хил хязгааргүй хөрөнгө оруулалт — таны стратеги.',
+    risk: 92, growth: 98, global: 94,
+    ret: '+22.3%',
+    port: [
+      { t:'VT',   n:'World ETF',   p:30 },
+      { t:'EEM',  n:'EM ETF',      p:25 },
+      { t:'TSLA', n:'Tesla Inc.',  p:25 },
+      { t:'BABA', n:'Alibaba',     p:20 }
+    ]
+  },
+  'global-balanced': {
+    badge:  'ДЭЛХИЙ · ТЭНЦВЭРТ',
+    type:   'Дэлхийн <span class="hl">Тэнцвэрт</span> Хөрөнгө Оруулагч',
+    desc:   'Та дэлхийн хэмжээнд тэнцвэрт портфель барьж, нэг зах зээлийн хэлбэлзэлд хэт өртөхгүй байхаар хуваарилалтаа зохицуулдаг.',
+    risk: 58, growth: 74, global: 89,
+    ret: '+13.8%',
+    port: [
+      { t:'VT',   n:'World ETF',   p:40 },
+      { t:'BNDX', n:'EM Bond ETF', p:25 },
+      { t:'AAPL', n:'Apple Inc.',  p:20 },
+      { t:'GLD',  n:'Gold ETF',    p:15 }
+    ]
+  },
+  'global-safe': {
+    badge:  'ДЭЛХИЙ · ХАМГААЛАЛТ',
+    type:   'Дэлхийн <span class="hl">Хамгаалалтын</span> Стратегич',
+    desc:   'Та дэлхийн хэмжээнд хөрөнгийн үнэ цэнийг хадгалахыг эрхэмлэж, аюулгүй найдвартай хөрөнгөд хуваарилдаг.',
+    risk: 30, growth: 50, global: 82,
+    ret: '+8.2%',
+    port: [
+      { t:'BNDX', n:'World Bond ETF',p:40 },
+      { t:'GLD',  n:'Gold ETF',      p:30 },
+      { t:'VT',   n:'World Equity',  p:20 },
+      { t:'SHV',  n:'Cash ETF',      p:10 }
+    ]
+  },
+  'mining-aggressive': {
+    badge:  'УУЛ УУРХАЙ · ИДЭВХТЭЙ',
+    type:   'Байгалийн Баялгийн <span class="hl">Эрсдэл Хайгч</span>',
+    desc:   'Та байгалийн баялагт суурилсан зах зээлийн хамгийн хурдан өсөлтийг хайж, уул уурхайн компаниудад идэвхтэй хөрөнгө оруулдаг.',
+    risk: 92, growth: 96, global: 58,
+    ret: '+25.1%',
+    port: [
+      { t:'BHP',  n:'BHP Group',     p:30 },
+      { t:'RIO',  n:'Rio Tinto',     p:25 },
+      { t:'FCX',  n:'Freeport-McM.', p:25 },
+      { t:'GLD',  n:'Gold ETF',      p:20 }
+    ]
+  },
+  'mining-balanced': {
+    badge:  'УУЛ УУРХАЙ · ТЭНЦВЭРТ',
+    type:   'Уул Уурхайн <span class="hl">Тэнцвэрт</span> Стратегич',
+    desc:   'Та эрдэс баялагт суурилсан зах зээлд тэнцвэрт хандаж, өгөөж ба аюулгүй байдлын хооронд ухаалаг тэнцвэр барьдаг.',
+    risk: 64, growth: 80, global: 52,
+    ret: '+14.6%',
+    port: [
+      { t:'BHP',  n:'BHP Group',   p:35 },
+      { t:'GLD',  n:'Gold ETF',    p:28 },
+      { t:'RIO',  n:'Rio Tinto',   p:22 },
+      { t:'AGG',  n:'Bond ETF',    p:15 }
+    ]
+  },
+  'mining-safe': {
+    badge:  'УУЛ УУРХАЙ · ХАМГААЛАЛТ',
+    type:   '<span class="hl">Эрдэс Баялгийн</span> Хамгаалагч',
+    desc:   'Та алт болон бусад аюулгүй эрдэс баялагт хуримтлал хадгалах зорилгоор хөрөнгө оруулдаг. Инфляцаас хамгаалал — таны тэргүүлэх зорилт.',
+    risk: 40, growth: 58, global: 47,
+    ret: '+9.8%',
+    port: [
+      { t:'GLD',  n:'Gold ETF',    p:45 },
+      { t:'BHP',  n:'BHP Group',   p:25 },
+      { t:'SLV',  n:'Silver ETF',  p:20 },
+      { t:'AGG',  n:'Bond ETF',    p:10 }
+    ]
+  }
+};
+
+/* ── NAVIGATION ────────────────────────────────────────────────── */
+function goTo(n) {
+  var from = document.getElementById('s' + currentScreen);
+  var to   = document.getElementById('s' + n);
+
+  from.classList.add('exiting');
+  from.classList.remove('active');
+
+  setTimeout(function() {
+    from.classList.remove('exiting');
+    to.classList.add('active');
+    // Re-trigger animations
+    to.querySelectorAll('[class*="au"]').forEach(function(el) {
+      var saved = el.className;
+      el.style.animation = 'none';
+      void el.offsetWidth;
+      el.style.animation = '';
+    });
+  }, 420);
+
+  currentScreen = n;
+
+  // Special: if going to result screen, populate it
+  if (n === 4) { setTimeout(populateResult, 500); }
+}
+
+/* ── ANSWER SELECTION ──────────────────────────────────────────── */
+function selectAnswer(q, val, el) {
+  answers[q] = val;
+  el.closest('.choices').querySelectorAll('.choice').forEach(function(c) {
+    c.classList.remove('selected');
+  });
+  el.classList.add('selected');
+}
+
+function nextQ(q) {
+  if (q === 1 && !answers.market) { shake('choices1'); return; }
+  if (q === 2 && !answers.risk)   { shake('choices2'); return; }
+  if (q === 3 && !answers.goal)   { shake('choices3'); return; }
+  goTo(q === 3 ? 4 : q + 1);
+}
+
+function shake(id) {
+  var el = document.getElementById(id);
+  el.style.animation = 'none';
+  void el.offsetWidth;
+  el.style.animation = 'shake 0.4s ease';
+}
+
+/* ── RESULT ────────────────────────────────────────────────────── */
+function populateResult() {
+  if (!answers.market || !answers.risk) return;
+  var key = answers.market + '-' + answers.risk;
+  var p = profiles[key];
+  if (!p) return;
+
+  document.getElementById('r-badge').textContent = p.badge;
+  document.getElementById('r-type').innerHTML   = p.type;
+  document.getElementById('r-desc').textContent = p.desc;
+  document.getElementById('r-return').textContent = p.ret + ' avg. /yr';
+
+  // Portfolio
+  var portEl = document.getElementById('portfolio-items');
+  portEl.innerHTML = '';
+  p.port.forEach(function(item) {
+    var row = document.createElement('div');
+    row.className = 'port-item';
+    row.innerHTML =
+      '<div class="port-ticker">' + item.t + '</div>' +
+      '<div class="port-name">' + item.n + '</div>' +
+      '<div class="port-pct">' + item.p + '%</div>' +
+      '<div class="port-bar"><div class="port-bar-fill" data-pct="' + item.p + '"></div></div>';
+    portEl.appendChild(row);
+  });
+
+  // Animate scores
+  setTimeout(function() {
+    animFill('sf-risk',   'sv-risk',   p.risk);
+    animFill('sf-growth', 'sv-growth', p.growth);
+    animFill('sf-global', 'sv-global', p.global);
+    document.querySelectorAll('.port-bar-fill').forEach(function(el) {
+      el.style.width = el.getAttribute('data-pct') + '%';
+    });
+  }, 300);
+}
+
+function animFill(fillId, valId, target) {
+  var fill = document.getElementById(fillId);
+  var val  = document.getElementById(valId);
+  fill.style.width = target + '%';
+  var start = 0;
+  var duration = 1100;
+  var startTime = null;
+  function step(ts) {
+    if (!startTime) startTime = ts;
+    var progress = Math.min((ts - startTime) / duration, 1);
+    var ease = 1 - Math.pow(1 - progress, 3);
+    val.textContent = Math.round(ease * target) + '%';
+    if (progress < 1) requestAnimationFrame(step);
+    else val.textContent = target + '%';
+  }
+  requestAnimationFrame(step);
+}
+
+/* ── SHARE / OPEN ACCOUNT ──────────────────────────────────────── */
+function shareResult() {
+  var key = answers.market + '-' + answers.risk;
+  var p = profiles[key];
+  if (!p) return;
+  var text = 'Би TDB Securities-ийн тест дээр "' + p.badge + '" хөрөнгө оруулагч гэдгийг олж мэдлээ! Та ч туршиж үз.';
+  if (navigator.share) {
+    navigator.share({ title: 'TDB Securities — Хөрөнгө Оруулагчийн Профайл', text: text });
+  } else if (navigator.clipboard) {
+    navigator.clipboard.writeText(text).then(function() { alert('Текст хуулагдлаа.'); });
+  }
+}
+
+function openAccount() {
+  // Replace with actual account opening URL
+  window.open('https://tdbs.mn', '_blank');
+}
+
+/* ── STARS ─────────────────────────────────────────────────────── */
+function drawStars() {
+  var canvas = document.getElementById('starsCanvas');
+  if (!canvas) return;
+  canvas.width  = window.innerWidth;
+  canvas.height = window.innerHeight;
+  var ctx = canvas.getContext('2d');
+  for (var i = 0; i < 80; i++) {
+    var x = Math.random() * canvas.width;
+    var y = Math.random() * canvas.height;
+    var r = Math.random() < 0.25 ? 1.4 : 0.8;
+    var alpha = 0.15 + Math.random() * 0.35;
+    ctx.beginPath();
+    ctx.arc(x, y, r, 0, Math.PI * 2);
+    ctx.fillStyle = 'rgba(208,220,232,' + alpha + ')';
+    ctx.fill();
+  }
+}
+drawStars();
+window.addEventListener('resize', drawStars);
+
+/* ── LOADER ────────────────────────────────────────────────────── */
+window.addEventListener('load', function() {
+  setTimeout(function() {
+    var loader = document.getElementById('loader');
+    loader.style.opacity = '0';
+    setTimeout(function() { loader.style.display = 'none'; }, 500);
+  }, 800);
+});
+
+/* ── SHAKE KEYFRAMES ───────────────────────────────────────────── */
+var style = document.createElement('style');
+style.textContent = '@keyframes shake{0%,100%{transform:translateX(0)}20%{transform:translateX(-8px)}40%{transform:translateX(8px)}60%{transform:translateX(-5px)}80%{transform:translateX(5px)}}';
+document.head.appendChild(style);
+</script>
+</body>
+</html>
